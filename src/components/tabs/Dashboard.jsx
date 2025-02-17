@@ -39,11 +39,19 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const res = await fetch('/api/transactions');
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       const transactions = await res.json();
-      processTransactions(transactions);
+
+      if (Array.isArray(transactions)) {
+        processTransactions(transactions);
+      } else {
+        setError('Invalid response format from server');
+      }
     } catch (err) {
       setError('Failed to fetch expenses data');
-      console.error(err);
+      console.error('Dashboard data fetch error:', err);
     } finally {
       setLoading(false);
     }
