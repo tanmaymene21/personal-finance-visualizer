@@ -16,11 +16,21 @@ export default function Transactions() {
     try {
       setLoading(true);
       const res = await fetch('/api/transactions');
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       const data = await res.json();
-      setTransactions(data);
+
+      if (Array.isArray(data)) {
+        setTransactions(data);
+      } else if (data.error) {
+        setError(data.error);
+      } else {
+        setError('Invalid response format from server');
+      }
     } catch (err) {
       setError('Failed to fetch transactions');
-      console.error(err);
+      console.error('Transaction fetch error:', err);
     } finally {
       setLoading(false);
     }

@@ -11,8 +11,11 @@ export async function GET(request) {
       .populate('category_id')
       .populate('account')
       .sort({ date: -1 });
-    return NextResponse.json(transactions);
+
+    // Ensure we're returning an array, even if empty
+    return NextResponse.json(transactions || []);
   } catch (error) {
+    console.error('Transaction fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch transactions' },
       { status: 500 },
@@ -27,8 +30,14 @@ export async function POST(request) {
     const body = await request.json();
     const user_id = 'test-user';
     const transaction = await Transaction.create({ ...body, user_id });
-    return NextResponse.json(transaction);
+
+    const populatedTransaction = await transaction
+      .populate('category_id')
+      .populate('account');
+
+    return NextResponse.json(populatedTransaction);
   } catch (error) {
+    console.error('Transaction creation error:', error);
     return NextResponse.json(
       { error: 'Failed to create transaction' },
       { status: 500 },
