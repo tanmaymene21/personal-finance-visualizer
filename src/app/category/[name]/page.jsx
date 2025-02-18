@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, use } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,7 @@ export default function CategoryDetails({ params }) {
   const [categoryStats, setCategoryStats] = useState({
     totalAmount: 0,
     transactionCount: 0,
+
     categoryId: null,
   });
   const [budget, setBudget] = useState(null);
