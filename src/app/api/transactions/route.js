@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Transaction from '@/models/Transaction';
+import Account from '@/models/Account';
+import Category from '@/models/Category';
+import mongoose from 'mongoose';
 
 // get all transactions
 export async function GET(request) {
   try {
     await connectDB();
     const user_id = 'test-user';
+
+    // Ensure models are registered
+    await Promise.all([
+      mongoose.models.Account || mongoose.model('Account', Account.schema),
+      mongoose.models.Category || mongoose.model('Category', Category.schema),
+    ]);
+
     const transactions = await Transaction.find({ user_id })
       .populate('category_id')
       .populate('account')
