@@ -1,82 +1,62 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Plus, TrendingUp, PieChart, ArrowRight } from 'lucide-react';
+import TrendsAnalysis from '@/components/analysis/TrendsAnalysis';
+import CategoryAnalysis from '@/components/analysis/CategoryAnalysis';
+import TransactionForm from '@/components/TransactionForm';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
-  const [monthlyExpenses, setMonthlyExpenses] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [summary, setSummary] = useState({
-    currentMonth: 0,
-    average: 0,
-    highest: 0,
-  });
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [availableYears, setAvailableYears] = useState([]);
+  const [activeView, setActiveView] = useState('trends');
+  const [monthlyExpenses, setMonthlyExpenses] = useState([]);
+  const [categoryData, setCategoryData] = useState([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedYear] = useState(new Date().getFullYear());
+  const router = useRouter();
 
   useEffect(() => {
     fetchTransactions();
-  }, [selectedYear]);
+  }, []);
 
   const fetchTransactions = async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/transactions');
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      const transactions = await res.json();
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
 
-      if (Array.isArray(transactions)) {
-        processTransactions(transactions);
+      if (Array.isArray(data)) {
+        setTransactions(data);
+        processTransactions(data);
       } else {
         setError('Invalid response format from server');
       }
     } catch (err) {
-      setError('Failed to fetch expenses data');
-      console.error('Dashboard data fetch error:', err);
+      setError('Failed to fetch transactions');
+      console.error('Transaction fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Get all available years from transactions
-  // Sort descending
-  // Create an object to store monthly totals
-  // Initialize all months for the selected year with 0
-  // Convert to array format for Recharts
-  // Calculate totals for each month in the selected year
-  // Calculate summary statistics for the selected year
   const processTransactions = (transactions) => {
-    const years = [
-      ...new Set(transactions.map((t) => new Date(t.date).getFullYear())),
-    ];
-    setAvailableYears(years.sort((a, b) => b - a));
+    // Process for monthly trends
+    processTrends(transactions);
+    // Process for category analysis
+    processCategories(transactions);
+  };
 
+  const processTrends = (transactions) => {
     const monthlyTotals = {};
-
     const months = Array.from({ length: 12 }, (_, i) => {
       const date = new Date(selectedYear, i, 1);
-      return date.toLocaleString('default', {
-        month: 'short',
-      });
+      return date.toLocaleString('default', { month: 'short' });
     });
 
     months.forEach((month) => {
@@ -87,10 +67,7 @@ export default function Dashboard() {
       if (transaction.transaction_type === 'expense') {
         const date = new Date(transaction.date);
         const transactionYear = date.getFullYear();
-        console.log(date, transactionYear, selectedYear);
-
         if (transactionYear === selectedYear) {
-          console.log('hello');
           const month = date.toLocaleString('default', { month: 'short' });
           monthlyTotals[month] += Number(transaction.amount);
         }
@@ -103,20 +80,36 @@ export default function Dashboard() {
     }));
 
     setMonthlyExpenses(chartData);
-
-    const amounts = Object.values(monthlyTotals);
-    setSummary({
-      currentMonth:
-        monthlyTotals[
-          new Date().toLocaleString('default', { month: 'short' })
-        ] || 0,
-      average: amounts.reduce((a, b) => a + b, 0) / amounts.length,
-      highest: Math.max(...amounts),
-    });
   };
 
-  const handleYearChange = (year) => {
-    setSelectedYear(Number(year));
+  const processCategories = (transactions) => {
+    const categories = {};
+
+    transactions
+      .filter((t) => t.transaction_type === 'expense')
+      .forEach((transaction) => {
+        const categoryId = transaction.category_id._id;
+        if (!categories[categoryId]) {
+          categories[categoryId] = {
+            name: transaction.category_id.name,
+            amount: 0,
+            count: 0,
+            transactions: [],
+          };
+        }
+        categories[categoryId].amount += Number(transaction.amount);
+        categories[categoryId].count += 1;
+        categories[categoryId].transactions.push(transaction);
+      });
+
+    const processedData = Object.values(categories)
+      .sort((a, b) => b.amount - a.amount)
+      .map((category, index) => ({
+        ...category,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      }));
+
+    setCategoryData(processedData);
   };
 
   if (error) return <div className="text-red-500">{error}</div>;
@@ -124,97 +117,101 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Analysis Type Selector */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Dashboard</h2>
-        <Select
-          value={selectedYear.toString()}
-          onValueChange={handleYearChange}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select year" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableYears.map((year) => (
-              <SelectItem key={year} value={year.toString()}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-4">
+          <Button
+            variant={activeView === 'trends' ? 'default' : 'outline'}
+            onClick={() => setActiveView('trends')}
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Trends
+          </Button>
+          <Button
+            variant={activeView === 'categories' ? 'default' : 'outline'}
+            onClick={() => setActiveView('categories')}
+          >
+            <PieChart className="w-4 h-4 mr-2" />
+            Categories
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              This Month's Expenses
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-500">
-              &#8377;{summary.currentMonth.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Analysis View */}
+      {activeView === 'trends' ? (
+        <TrendsAnalysis
+          monthlyExpenses={monthlyExpenses}
+          selectedYear={selectedYear}
+        />
+      ) : (
+        <CategoryAnalysis categoryData={categoryData} />
+      )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Average Monthly Expenses
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              &#8377;{summary.average.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Highest Monthly Expense
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              &#8377;{summary.highest.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Expenses ({selectedYear})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyExpenses}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `₹${value.toLocaleString()}`}
-                />
-                <Tooltip
-                  formatter={(value) => [
-                    `₹${value.toLocaleString()}`,
-                    'Expenses',
-                  ]}
-                  labelStyle={{ color: 'black' }}
-                />
-                <Bar
-                  dataKey="amount"
-                  fill="rgb(239, 68, 68)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+      {/* Recent Transactions */}
+      <div className="mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Recent Transactions</h2>
+          <div className="flex gap-4">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/transactions')}
+            >
+              <ArrowRight className="w-4 h-4 mr-2" />
+              View All
+            </Button>
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Transaction
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="border rounded-lg">
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="py-3 px-4 text-left">Date</th>
+                <th className="py-3 px-4 text-left">Category</th>
+                <th className="py-3 px-4 text-left">Description</th>
+                <th className="py-3 px-4 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.slice(0, 5).map((transaction) => (
+                <tr key={transaction._id} className="border-t">
+                  <td className="py-3 px-4">
+                    {new Date(transaction.date).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 px-4">{transaction.category_id.name}</td>
+                  <td className="py-3 px-4">{transaction.description}</td>
+                  <td className="py-3 px-4 text-right">
+                    <span
+                      className={
+                        transaction.transaction_type === 'income'
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }
+                    >
+                      {transaction.transaction_type === 'income' ? '+' : '-'}₹
+                      {Math.abs(transaction.amount).toLocaleString()}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Transaction Form Modal */}
+      {isFormOpen && (
+        <TransactionForm
+          onClose={() => setIsFormOpen(false)}
+          onSubmit={() => {
+            setIsFormOpen(false);
+            fetchTransactions();
+          }}
+        />
+      )}
     </div>
   );
 }
