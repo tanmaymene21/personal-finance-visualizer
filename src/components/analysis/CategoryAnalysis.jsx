@@ -83,7 +83,9 @@ export default function CategoryAnalysis({ categoryData }) {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => window.open(`/category/${category.name}`, '_blank')}
+                onClick={() =>
+                  window.open(`/category/${category.name}`, '_blank')
+                }
               >
                 <ArrowRight className="w-4 h-4 mr-2" />
                 View Details
