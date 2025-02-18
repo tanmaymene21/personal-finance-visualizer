@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Account from '@/models/Account';
+import Transaction from '@/models/Transaction';
 
 // update an account
 export async function PUT(request, { params }) {
@@ -32,18 +33,16 @@ export async function DELETE(request, { params }) {
     await connectDB();
     const { id } = params;
 
-    const account = await Account.findByIdAndDelete(id);
+    await Transaction.deleteMany({ account: id });
 
-    if (!account) {
-      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
-    }
+    await Account.findByIdAndDelete(id);
 
-    return NextResponse.json({ message: 'Account deleted successfully' });
+    return new Response(null, { status: 204 });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to delete account' },
-      { status: 500 },
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
 

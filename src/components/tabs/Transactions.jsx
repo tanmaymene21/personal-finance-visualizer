@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import TransactionForm from '@/components/TransactionForm';
+import TransactionForm from '@/components/forms/TransactionForm';
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);

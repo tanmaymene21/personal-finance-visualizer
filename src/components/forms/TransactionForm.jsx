@@ -19,7 +19,6 @@ export default function TransactionForm({ transaction, onClose, onSubmit }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch accounts and categories
     const fetchData = async () => {
       try {
         const [accountsRes, categoriesRes] = await Promise.all([
@@ -38,7 +37,6 @@ export default function TransactionForm({ transaction, onClose, onSubmit }) {
       }
     };
 
-    // If editing, populate form with transaction data
     if (transaction) {
       setFormData({
         ...transaction,

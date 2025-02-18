@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Budget from '@/models/Budget';
+import Category from '@/models/Category';
 
 // Get all budgets for a specific month and year
 export async function GET(request) {
