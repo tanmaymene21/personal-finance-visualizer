@@ -1,18 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingUp, PieChart, ArrowRight } from 'lucide-react';
+import { Plus, TrendingUp, PieChart, ArrowRight, Wallet } from 'lucide-react';
 import TrendsAnalysis from '@/components/analysis/TrendsAnalysis';
 import CategoryAnalysis from '@/components/analysis/CategoryAnalysis';
-import TransactionForm from '@/components/TransactionForm';
+import TransactionForm from '@/components/forms/TransactionForm';
 import { useRouter } from 'next/navigation';
+import Accounts from '@/components/tabs/Accounts';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeView, setActiveView] = useState('trends');
+  const [monthlyExpenses, setMonthlyExpenses] = useState([]);
+  const [categoryData, setCategoryData] = useState([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedYear] = useState(new Date().getFullYear());
+  const router = useRouter();
   const [activeView, setActiveView] = useState('trends');
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
@@ -37,6 +44,15 @@ export default function Dashboard() {
       } else {
         setError('Invalid response format from server');
       }
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setTransactions(data);
+        processTransactions(data);
+      } else {
+        setError('Invalid response format from server');
+      }
     } catch (err) {
       setError('Failed to fetch transactions');
       console.error('Transaction fetch error:', err);
@@ -46,6 +62,13 @@ export default function Dashboard() {
   };
 
   const processTransactions = (transactions) => {
+    // Process for monthly trends
+    processTrends(transactions);
+    // Process for category analysis
+    processCategories(transactions);
+  };
+
+  const processTrends = (transactions) => {
     // Process for monthly trends
     processTrends(transactions);
     // Process for category analysis
@@ -91,6 +114,7 @@ export default function Dashboard() {
         const categoryId = transaction.category_id._id;
         if (!categories[categoryId]) {
           categories[categoryId] = {
+            _id: categoryId,
             name: transaction.category_id.name,
             amount: 0,
             count: 0,
@@ -118,6 +142,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Analysis Type Selector */}
+      {/* Analysis Type Selector */}
       <div className="flex justify-between items-center">
         <div className="flex gap-4">
           <Button
@@ -134,6 +159,13 @@ export default function Dashboard() {
             <PieChart className="w-4 h-4 mr-2" />
             Categories
           </Button>
+          <Button
+            variant={activeView === 'accounts' ? 'default' : 'outline'}
+            onClick={() => setActiveView('accounts')}
+          >
+            <Wallet className="w-4 h-4 mr-2" />
+            Accounts
+          </Button>
         </div>
       </div>
 
@@ -143,8 +175,10 @@ export default function Dashboard() {
           monthlyExpenses={monthlyExpenses}
           selectedYear={selectedYear}
         />
-      ) : (
+      ) : activeView === 'categories' ? (
         <CategoryAnalysis categoryData={categoryData} />
+      ) : (
+        <Accounts />
       )}
 
       {/* Recent Transactions */}
@@ -202,6 +236,16 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Transaction Form Modal */}
+      {isFormOpen && (
+        <TransactionForm
+          onClose={() => setIsFormOpen(false)}
+          onSubmit={() => {
+            setIsFormOpen(false);
+            fetchTransactions();
+          }}
+        />
+      )}
       {/* Transaction Form Modal */}
       {isFormOpen && (
         <TransactionForm

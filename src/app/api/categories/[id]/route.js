@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Category from '@/models/Category';
+import Transaction from '@/models/Transaction';
 
 // get a category
 export async function GET(request, { params }) {
@@ -49,18 +50,17 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await connectDB();
-    const category = await Category.findByIdAndDelete(params.id);
-    if (!category) {
-      return NextResponse.json(
-        { error: 'Category not found' },
-        { status: 404 },
-      );
-    }
-    return NextResponse.json({ message: 'Category deleted successfully' });
+    const { id } = params;
+
+    await Transaction.deleteMany({ category_id: id });
+
+    await Category.findByIdAndDelete(id);
+
+    return new Response(null, { status: 204 });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to delete category' },
-      { status: 500 },
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }

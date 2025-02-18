@@ -15,16 +15,6 @@ const AccountSchema = new mongoose.Schema(
       required: true,
       enum: ['checking', 'savings', 'credit', 'investment'],
     },
-    balance: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    currency: {
-      type: String,
-      required: true,
-      default: 'USD',
-    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
