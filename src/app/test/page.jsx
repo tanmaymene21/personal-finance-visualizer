@@ -24,7 +24,6 @@ export default function TestAPI() {
           body: {
             name: 'Test Account',
             type: 'checking',
-            balance: 1000,
           },
         },
         {
@@ -33,7 +32,6 @@ export default function TestAPI() {
           description: 'Update an existing account',
           body: {
             name: 'Updated Account',
-            balance: 2000,
           },
         },
         {

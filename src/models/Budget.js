@@ -9,9 +9,14 @@ const BudgetSchema = new mongoose.Schema(
     category_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
-      required: true,
+      // Not required for overall budget
     },
-    monthly_budget: {
+    budget_type: {
+      type: String,
+      required: true,
+      enum: ['overall', 'category'],
+    },
+    amount: {
       type: Number,
       required: true,
     },
@@ -29,6 +34,18 @@ const BudgetSchema = new mongoose.Schema(
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
   },
+);
+
+// Compound index to ensure unique budgets per user, month, year, and category/overall
+BudgetSchema.index(
+  {
+    user_id: 1,
+    month: 1,
+    year: 1,
+    category_id: 1,
+    budget_type: 1,
+  },
+  { unique: true },
 );
 
 export default mongoose.models.Budget || mongoose.model('Budget', BudgetSchema);
