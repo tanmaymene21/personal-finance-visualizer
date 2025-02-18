@@ -31,7 +31,7 @@ export async function POST(request) {
     const user_id = 'test-user';
     const transaction = await Transaction.create({ ...body, user_id });
 
-    const populatedTransaction = await transaction
+    const populatedTransaction = await Transaction.findById(transaction._id)
       .populate('category_id')
       .populate('account');
 

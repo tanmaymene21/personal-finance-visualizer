@@ -89,8 +89,8 @@ export default function TestAPI() {
           body: {
             amount: 2000,
             description: 'Transaction description',
-            category_id: '67b3348770d41ea53fdf93ef',
-            account: '67b335ba70d41ea53fdf93fb',
+            category_id: '67b40be2dde066618fd7f5ef',
+            account: '67b40bb7dde066618fd7f5eb',
             date: '2024-01-01',
             transaction_type: 'income',
           },
