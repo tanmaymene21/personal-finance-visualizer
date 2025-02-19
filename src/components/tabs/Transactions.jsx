@@ -72,11 +72,15 @@ export default function Transactions() {
     <Card className="mx-auto">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
         <CardTitle className="text-2xl font-bold">Transactions</CardTitle>
-        <Button onClick={() => setIsFormOpen(true)} className="">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Transaction
+        <Button
+          onClick={() => setIsFormOpen(true)}
+          className="flex items-center p-2.5 sm:px-4 sm:py-2 rounded-full sm:rounded-md"
+        >
+          <Plus className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Add Transaction</span>
         </Button>
       </CardHeader>
+
       <CardContent>
         <div className="rounded-xl border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
