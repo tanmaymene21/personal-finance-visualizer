@@ -1,28 +1,42 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ModeToggle } from '@/components/ModeToggle';
+import React from 'react';
+import Image from 'next/image';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const Navbar = () => {
   return (
     <div className="relative">
-      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent" />
 
-      <nav className="bg-background/80 backdrop-blur-lg border-b border-border/40">
-        <div className="max-w-7xl mx-auto px-4">
+      <nav className="bg-background/95 backdrop-blur-xl border-b border-border/40 sticky top-0 z-50 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-primary/50 flex items-center justify-center">
-                <span className="font-bold text-primary-foreground">F</span>
+              <div className="relative w-10 h-10 overflow-hidden rounded-md">
+                <Image
+                  src="/logo.png"
+                  alt="Finance Visualizer Logo"
+                  width={50}
+                  height={50}
+                  className="object-contain"
+                  priority
+                />
               </div>
-              <span className="font-semibold text-lg text-nowrap">
-                Finance Visualizer
-              </span>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg tracking-tight text-foreground">
+                  Finance Visualizer
+                </span>
+                <span className="hidden sm:inline-block text-xs text-muted-foreground">
+                  Track • Budget • Grow
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <ModeToggle />
-            </div>
+            <Avatar>
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
           </div>
         </div>
       </nav>

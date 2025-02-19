@@ -2,7 +2,6 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import '@/styles/globals.css';
 
 import Navbar from '@/components/Navbar';
-import { ThemeProvider } from '@/providers/theme-provider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -17,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: 'Personal Finance Visualizer',
   description: 'Personal Finance Visualizer',
+  icons: {
+    icon: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -25,15 +27,8 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Navbar />
-          {children}
-        </ThemeProvider>
+        <Navbar />
+        {children}
       </body>
     </html>
   );
